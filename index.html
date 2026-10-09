@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加速度实验室 | 高中物理互动实验</title>
+<style>
+:root{--bg:#0a1020;--panel:#121c30;--line:#263650;--text:#edf4ff;--muted:#96a8c2;--blue:#65b9ff;--green:#69e0bd;--orange:#ffbd73}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#172744,#0a1020 65%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+header{padding:26px max(20px,calc((100% - 1200px)/2));border-bottom:1px solid var(--line);background:#0b1425cc}
+.eyebrow{font-size:12px;letter-spacing:3px;color:var(--green)}
+h1{font-size:clamp(26px,4vw,40px);margin:8px 0}
+header p,.muted{color:var(--muted);line-height:1.7}
+main{max-width:1200px;margin:auto;padding:22px;display:grid;gap:18px}
+.panel{background:linear-gradient(145deg,#152139,#10192b);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+.panel h2{font-size:17px;margin:0 0 15px}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px}
+.controls{display:grid;gap:15px}
+label{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#c5d3e8;margin-bottom:7px}
+output{color:var(--green);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--blue)}
+select,button{font:inherit}
+select{width:100%;padding:10px;background:#0a1426;color:var(--text);border:1px solid var(--line);border-radius:9px}
+.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+button{border:1px solid #344966;border-radius:9px;padding:10px 12px;color:var(--text);background:#1a2a43;cursor:pointer}
+button:hover{filter:brightness(1.2)}
+button.primary{background:#1767a8;border-color:#2789ce}
+button.green{background:#125c51;border-color:#258b7a}
+button:disabled{opacity:.45;cursor:not-allowed}
+.stage{background:#0a1425;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:260px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:10px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.metric{background:#0a1425;border:1px solid var(--line);border-radius:10px;padding:12px}
+.metric span{font-size:12px;color:var(--muted)}
+.metric strong{display:block;font-size:clamp(18px,2.5vw,25px);margin-top:7px;font-variant-numeric:tabular-nums}
+.graphs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.graph{background:#0a1425;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.graph h3{font-size:13px;margin:0 0 6px}
+.graph canvas{height:180px}
+.table-wrap{overflow:auto;max-height:350px;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid #263650}
+th{position:sticky;top:0;background:#1a2940;color:#c9d8ec}
+th:first-child,td:first-child{text-align:center}
+.note{font-size:12px;color:var(--muted);line-height:1.8}
+.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--green);margin-bottom:12px}
+.status:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+footer{text-align:center;color:#7487a3;font-size:12px;padding:0 20px 28px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.graphs{grid-template-columns:1fr 1fr}.graphs .graph:last-child{grid-column:1/-1}}
+@media(max-width:520px){main{padding:12px}.panel{padding:13px}.graphs{grid-template-columns:1fr}.graphs .graph:last-child{grid-column:auto}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}canvas{height:220px}}
+@media print{body{background:white;color:#111}.panel,.metric,.graph,.stage{background:white;color:#111;border:1px solid #bbb}header{background:white;color:#111;border-color:#bbb}header p,.muted,.note,.metric span,.legend,footer{color:#444}main{display:block;padding:0;max-width:none}.panel{margin:12px 0;break-inside:avoid}.layout{display:block}.controls,.buttons{display:none}.graphs{grid-template-columns:repeat(3,1fr)}.table-wrap{max-height:none;overflow:visible}th{position:static;background:#eee;color:#111}button{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">PHYSICS LAB · 物理互动实验</div>
+  <h1>加速度实验室</h1>
+  <p>从运动现象到数据图像 · 探究速度如何随时间变化</p>
+</header>
 
+<main>
+  <div class="layout">
+    <section class="panel">
+      <h2>实验控制台</h2>
+      <div class="controls">
+        <div>
+          <label for="mode">实验类型</label>
+          <select id="mode">
+            <option value="incline">斜面小车实验</option>
+            <option value="horizontal">水平轨道实验</option>
+          </select>
+        </div>
+        <div id="angleBox">
+          <label for="angle">斜面倾角 <output id="angleOut">10°</output></label>
+          <input id="angle" type="range" min="0" max="35" value="10" step="1">
+        </div>
+        <div>
+          <label for="mu">摩擦系数 μ <output id="muOut">0.03</output></label>
+          <input id="mu" type="range" min="0" max="0.25" value="0.03" step="0.01">
+        </div>
+        <div>
+          <label for="v0">初速度 <output id="v0Out">0.50 m/s</output></label>
+          <input id="v0" type="range" min="0" max="3" value="0.5" step="0.1">
+        </div>
+        <div>
+          <label for="mass">小车质量 <output id="massOut">0.50 kg</output></label>
+          <input id="mass" type="range" min="0.1" max="2" value="0.5" step="0.1">
+        </div>
+        <div>
+          <label for="duration">实验时长 <output id="durationOut">8 s</output></label>
+          <input id="duration" type="range" min="3" max="15" value="8" step="1">
+        </div>
+        <div>
+          <label for="interval">采样间隔</label>
+          <select id="interval">
+            <option value="0.1">0.1 秒</option>
+            <option value="0.2" selected>0.2 秒</option>
+            <option value="0.5">0.5 秒</option>
+            <option value="1">1 秒</option>
+          </select>
+        </div>
+        <div class="buttons">
+          <button class="primary" id="startBtn">▶ 开始实验</button>
+          <button id="pauseBtn" disabled>Ⅱ 暂停</button>
+          <button id="resetBtn">↺ 重置实验</button>
+          <button id="sampleBtn">＋ 记录当前点</button>
+          <button class="green" id="csvBtn">导出 CSV</button>
+          <button id="reportBtn">打印实验报告</button>
+        </div>
+      </div>
+      <p class="note">提示：先调整参数，再开始实验。自动采样会按设定的采样间隔记录数据，也可手动记录当前时刻。</p>
+    </section>
+
+    <section class="panel">
+      <h2>小车运动模拟</h2>
+      <div class="status" id="status">准备就绪，可以开始实验</div>
+      <div class="stage"><canvas id="scene" aria-label="小车运动动画"></canvas></div>
+      <div class="legend">
+        <span><i class="dot" style="background:#65b9ff"></i>小车位置</span>
+        <span><i class="dot" style="background:#69e0bd"></i>运动方向</span>
+        <span>模型：理想化动力学模拟</span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>实验时间 t</span><strong id="timeVal">0.00 s</strong></div>
+        <div class="metric"><span>位移 x</span><strong id="posVal">0.00 m</strong></div>
+        <div class="metric"><span>速度 v</span><strong id="velVal">0.50 m/s</strong></div>
+        <div class="metric"><span>加速度 a</span><strong id="accVal">0.00 m/s²</strong></div>
+      </div>
+      <p class="note" id="formula">理论模型：a = g(sin θ − μ cos θ)。斜面向下为正方向；速度可能因摩擦而改变方向。</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>实时运动图像</h2>
+    <div class="graphs">
+      <div class="graph"><h3>位移—时间图像（x-t）</h3><canvas id="graphX"></canvas></div>
+      <div class="graph"><h3>速度—时间图像（v-t）</h3><canvas id="graphV"></canvas></div>
+      <div class="graph"><h3>加速度—时间图像（a-t）</h3><canvas id="graphA"></canvas></div>
+    </div>
+    <p class="note">图像根据已记录的模拟数据绘制。斜面实验使用恒定加速度模型；水平轨道使用简化摩擦模型。实际实验可能受到轨道不平、空气阻力和测量误差影响。</p>
+  </section>
+
+  <section class="panel">
+    <h2>实验数据记录表</h2>
+    <p class="muted" style="font-size:13px">自动采样和手动记录的数据都会显示在这里。</p>
+    <div class="buttons" style="max-width:360px;margin-bottom:12px">
+      <button id="clearBtn">清空数据表</button>
+      <button id="csvBtn2">导出数据表</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>序号</th><th>时间 t（s）</th><th>位移 x（m）</th><th>速度 v（m/s）</th><th>加速度 a（m/s²）</th></tr></thead>
+        <tbody id="dataBody"><tr><td colspan="5" style="text-align:center;color:#96a8c2">尚无数据，请开始实验或手动记录</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="report">
+    <h2>实验报告</h2>
+    <p id="reportText" class="muted">完成实验后，这里将生成实验参数、数据摘要和结论建议。点击“打印实验报告”可保存为 PDF 或打印。</p>
+    <p class="note">科学说明：本页面输出的是计算机模型的模拟数据，不是传感器的真实测量结果。做正式实验时，应使用真实测量数据并分析误差。</p>
+  </section>
+</main>
+<footer>加速度实验室 · 高中物理互动学习工具 · 仅供学习与模拟实验使用</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const g = 9.81;
+  const state = {t:0,x:0,v:0,a:0,running:false,finished:false,lastStamp:null,lastSample:0,data:[],raf:null};
+  const controls = ['mode','angle','mu','v0','mass','duration','interval'];
+  const fmt = (n,d=2) => Number(n).toFixed(d);
+  const params = () => ({
+    mode:$('mode').value,
+    angle:Number($('angle').value),
+    mu:Number($('mu').value),
+    v0:Number($('v0').value),
+    mass:Number($('mass').value),
+    duration:Number($('duration').value),
+    interval:Number($('interval').value)
+  });
+  function acceleration(v) {
+    const p = params();
+    if(p.mode === 'incline') {
+      const drive = g*Math.sin(p.angle*Math.PI/180);
+      const friction = g*p.mu*Math.cos(p.angle*Math.PI/180);
+      if(Math.abs(v)<0.015 && drive <= friction) return 0;
+      return v >= 0 ? drive-friction : drive+friction;
+    }
+    if(Math.abs(v)<0.015) return 0;
+    return -Math.sign(v)*p.mu*g;
+  }
+  function updateLabels() {
+    $('angleOut').textContent = $('angle').value+'°';
+    $('muOut').textContent = fmt($('mu').value,2);
+    $('v0Out').textContent = fmt($('v0').value)+' m/s';
+    $('massOut').textContent = fmt($('mass').value)+' kg';
+    $('durationOut').textContent = $('duration').value+' s';
+    $('angleBox').style.display = $('mode').value==='incline'?'block':'none';
+    const p = params();
+    const a = acceleration(p.v0);
+    $('formula').textContent = p.mode==='incline'
+      ? `理论模型：a = g(sin θ − μ cos θ)。当前初始加速度约为 ${fmt(a)} m/s²，斜面向下为正方向。`
+      : `理论模型：小车运动时 a = −μg · sign(v)，静止且无外部驱动力时保持静止。当前摩擦系数 μ = ${fmt(p.mu,2)}。`;
+    if(!state.running && state.t===0) {
+      state.v=p.v0; state.a=acceleration(state.v);
+      updateMetrics(); drawScene(); drawGraphs();
+    }
+  }
+  function updateMetrics() {
+    $('timeVal').textContent=fmt(state.t)+' s';
+    $('posVal').textContent=fmt(state.x)+' m';
+    $('velVal').textContent=fmt(state.v)+' m/s';
+    $('accVal').textContent=fmt(state.a)+' m/s²';
+  }
+  function fitCanvas(canvas, height) {
+    const rect=canvas.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    canvas.width=Math.max(1,Math.round(rect.width*dpr));
+    canvas.height=Math.max(1,Math.round((height||rect.height)*dpr));
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {ctx,w:rect.width,h:height||rect.height};
+  }
+  function drawScene() {
+    const c=$('scene'), {ctx,w,h}=fitCanvas(c,260);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#0a1425';ctx.fillRect(0,0,w,h);
+    const p=params(), slope=p.mode==='incline' ? Math.sin(p.angle*Math.PI/180)*0.55 : 0;
+    const left=26,right=w-25,baseY=178;
+    const yAt=x=>baseY-(x-left)*slope;
+    ctx.strokeStyle='#405776';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(left,yAt(left));ctx.lineTo(right,yAt(right));ctx.stroke();
+    ctx.strokeStyle='#263650';ctx.lineWidth=1;
+    for(let i=0;i<8;i++){const x=left+i*(right-left)/7;ctx.beginPath();ctx.moveTo(x,yAt(x)+7);ctx.lineTo(x-9,yAt(x)+19);ctx.stroke();}
+    ctx.fillStyle='#96a8c2';ctx.font='12px sans-serif';ctx.fillText(p.mode==='incline'?'斜面轨道':'水平轨道',left,32);
+    const maxX=Math.max(1,Math.max(...state.data.map(d=>Math.abs(d.x)),Math.abs(state.x)));
+    const cartX=left+24+Math.max(0,Math.min(1,(state.x+0.2)/(maxX+0.2)))*(right-left-78);
+    const cy=yAt(cartX);
+    ctx.fillStyle='#65b9ff';ctx.strokeStyle='#a7dcff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(cartX-25,cy-31,50,23,5);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#dceeff';ctx.fillRect(cartX-15,cy-26,12,8);ctx.fillRect(cartX+3,cy-26,12,8);
+    ctx.fillStyle='#263650';ctx.beginPath();ctx.arc(cartX-15,cy-5,7,0,Math.PI*2);ctx.arc(cartX+15,cy-5,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#69e0bd';ctx.beginPath();ctx.moveTo(cartX+32,cy-19);ctx.lineTo(cartX+43,cy-14);ctx.lineTo(cartX+32,cy-9);ctx.fill();
+    ctx.fillStyle='#edf4ff';ctx.font='13px sans-serif';ctx.fillText('t = '+fmt(state.t)+' s',left,58);
+    ctx.fillStyle='#96a8c2';ctx.fillText('小车位移：'+fmt(state.x)+' m',left,78);
+    ctx.fillText('加速度：'+fmt(state.a)+' m/s²',left,98);
+  }
+  function drawGraph(canvas,key,color,label) {
+    const {ctx,w,h}=fitCanvas(canvas,180);
+    ctx.clearRect(0,0,w,h);ctx.fillStyle='#0a1425';ctx.fillRect(0,0,w,h);
+    const pad={l:38,r:10,t:13,b:28}, gw=w-pad.l-pad.r,gh=h-pad.t-pad.b;
+    ctx.strokeStyle='#263650';ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=pad.t+gh*i/4;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    }
+    const p=params(), all=state.data.length?state.data:[{t:0,x:0,v:p.v0,a:acceleration(p.v0)}];
+    const ts=all.map(d=>d.t), vals=all.map(d=>d[key]);
+    let xmin=0,xmax=Math.max(p.duration,1);
+    let ymin=Math.min(0,...vals),ymax=Math.max(0,...vals);
+    if(Math.abs(ymax-ymin)<0.1){ymax+=0.5;ymin-=0.5;}
+    const extra=(ymax-ymin)*0.12;ymin-=extra;ymax+=extra;
+    const X=t=>pad.l+(t-xmin)/(xmax-xmin)*gw;
+    const Y=v=>pad.t+(ymax-v)/(ymax-ymin)*gh;
+    ctx.fillStyle='#96a8c2';ctx.font='10px sans-serif';ctx.textAlign='right';
+    for(let i=0;i<=4;i++){const v=ymax-(ymax-ymin)*i/4;ctx.fillText(fmt(v,1),pad.l-5,pad.t+gh*i/4+3);}
+    ctx.textAlign='center';
+    for(let i=0;i<=4;i++){ctx.fillText(fmt(xmax*i/4,0),pad.l+gw*i/4,h-9);}
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();
+    all.forEach((d,i)=>{const x=X(d.t),y=Y(d[key]);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    ctx.stroke();
+    all.forEach(d=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(X(d.t),Y(d[key]),2.5,0,Math.PI*2);ctx.fill();});
+    ctx.fillStyle='#96a8c2';ctx.textAlign='left';ctx.fillText(label,5,10);
+  }
+  function drawGraphs(){drawGraph($('graphX'),'x','#65b9ff','x (m)');drawGraph($('graphV'),'v','#69e0bd','v (m/s)');drawGraph($('graphA'),'a','#ffbd73','a (m/s²)');}
+  function renderTable(){
+    const body=$('dataBody');
+    if(!state.data.length){body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#96a8c2">尚无数据，请开始实验或手动记录</td></tr>';return;}
+    body.innerHTML=state.data.slice().reverse().map((d,i)=>`<tr><td>${state.data.length-i}</td><td>${fmt(d.t,2)}</td><td>${fmt(d.x,4)}</td><td>${fmt(d.v,4)}</td><td>${fmt(d.a,4)}</td></tr>`).join('');
+  }
+  function record(){
+    const d={t:state.t,x:state.x,v:state.v,a:state.a};
+    if(state.data.length && Math.abs(state.data[state.data.length-1].t-d.t)<0.00001)return;
+    state.data.push(d);renderTable();drawGraphs();updateReport();
+  }
+  function updateReport(){
+    const p=params();
+    if(!state.data.length){$('reportText').textContent='完成实验后，这里将生成实验参数、数据摘要和结论建议。';return;}
+    const xs=state.data.map(d=>d.x),vs=state.data.map(d=>d.v),as=state.data.map(d=>d.a);
+    const maxX=Math.max(...xs),minX=Math.min(...xs);
+    const text=`实验类型：${p.mode==='incline'?'斜面小车实验':'水平轨道实验'}；斜面倾角：${p.angle}°；摩擦系数：${fmt(p.mu,2)}；小车质量：${fmt(p.mass)} kg；初速度：${fmt(p.v0)} m/s；计划时长：${p.duration} s；采样间隔：${p.interval} s。\n已记录数据：${state.data.length} 组。实际记录时间：${fmt(state.data[state.data.length-1].t)} s。记录位移范围：${fmt(minX)} 至 ${fmt(maxX)} m。记录速度范围：${fmt(Math.min(...vs))} 至 ${fmt(Math.max(...vs))} m/s。记录加速度范围：${fmt(Math.min(...as))} 至 ${fmt(Math.max(...as))} m/s²。\n分析建议：观察 v-t 图像的斜率判断加速度；若速度随时间近似线性变化，说明在当前模型下加速度近似恒定。比较不同参数实验时，建议每次只改变一个变量，并记录数据、作图后再得出结论。\n注意：以上数据来自理想化计算机模拟，不代表真实测量结果。`;
+    $('reportText').textContent=text;
+  }
+  function setStatus(s){$('status').textContent=s;}
+  function stop(message){
+    state.running=false;
+    if(state.raf)cancelAnimationFrame(state.raf);
+    state.raf=null;state.lastStamp=null;
+    $('startBtn').disabled=state.finished;
+    $('pauseBtn').disabled=true;
+    $('pauseBtn').textContent='Ⅱ 暂停';
+    if(message)setStatus(message);
+  }
+  function step(stamp){
+    if(!state.running)return;
+    if(state.lastStamp===null)state.lastStamp=stamp;
+    let dt=Math.min((stamp-state.lastStamp)/1000,0.05);
+    state.lastStamp=stamp;
+    const p=params();
+    const nextA=acceleration(state.v);
+    state.x+=state.v*dt+0.5*nextA*dt*dt;
+    state.v+=nextA*dt;
+    state.a=acceleration(state.v);
+    state.t+=dt;
+    if(Math.abs(state.v)<0.015 && state.a===0)state.v=0;
+    if(state.t-state.lastSample>=p.interval || state.t>=p.duration){
+      state.lastSample=state.t;record();
+    }
+    updateMetrics();drawScene();drawGraphs();
+    if(state.t>=p.duration){
+      state.t=p.duration;
+      updateMetrics();record();
+      state.finished=true;stop('实验完成 · 已自动记录最后一组数据');
+      drawScene();drawGraphs();updateReport();return;
+    }
+    state.raf=requestAnimationFrame(step);
+  }
+  function start(){
+    if(state.finished)return;
+    if(state.t===0 && state.data.length===0){const p=params();state.v=p.v0;state.a=acceleration(state.v);record();}
+    state.running=true;state.lastStamp=null;
+    $('startBtn').disabled=true;$('pauseBtn').disabled=false;
+    setStatus('实验运行中 · 正在自动采样');
+    state.raf=requestAnimationFrame(step);
+  }
+  function reset(){
+    stop('准备就绪，可以开始实验');
+    state.t=0;state.x=0;state.v=params().v0;state.a=acceleration(state.v);
+    state.finished=false;state.lastSample=0;state.data=[];
+    $('startBtn').disabled=false;$('pauseBtn').disabled=true;
+    updateMetrics();renderTable();drawScene();drawGraphs();updateReport();
+  }
+  function exportCSV(){
+    if(!state.data.length){alert('当前没有数据可导出，请先运行实验或记录数据。');return;}
+    const rows=[['时间 t (s)','位移 x (m)','速度 v (m/s)','加速度 a (m/s²)'],...state.data.map(d=>[d.t,d.x,d.v,d.a])];
+    const csv='\uFEFF'+rows.map(row=>row.map(v=>typeof v==='number'?String(Number(v.toFixed(6))):'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='加速度实验数据.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  }
+  $('startBtn').addEventListener('click',start);
+  $('pauseBtn').addEventListener('click',()=>{
+    if(state.running){stop('实验已暂停');$('startBtn').disabled=false;$('pauseBtn').disabled=true;}
+  });
+  $('resetBtn').addEventListener('click',reset);
+  $('sampleBtn').addEventListener('click',()=>{state.a=acceleration(state.v);record();setStatus('已手动记录当前数据点');});
+  $('csvBtn').addEventListener('click',exportCSV);
+  $('csvBtn2').addEventListener('click',exportCSV);
+  $('reportBtn').addEventListener('click',()=>{updateReport();window.print();});
+  $('clearBtn').addEventListener('click',()=>{state.data=[];state.lastSample=state.t;renderTable();drawGraphs();updateReport();setStatus('数据表已清空；运动状态未改变');});
+  controls.forEach(id=>$(id).addEventListener('input',()=>{
+    updateLabels();
+    if(state.running){stop('参数已更改，请重新开始实验');$('startBtn').disabled=false;state.finished=false;}
+    if(state.t===0){state.v=params().v0;state.a=acceleration(state.v);updateMetrics();drawScene();drawGraphs();}
+  }));
+  window.addEventListener('resize',()=>{drawScene();drawGraphs();});
+  if(!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.beginPath();this.rect(x,y,w,h);return this;};
+  }
+  updateLabels();reset();
+})();
+</script>
+</body>
+</html>
